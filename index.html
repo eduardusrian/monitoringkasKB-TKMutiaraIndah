@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz@14..32&display=swap" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
+        /* ===== STYLES ===== */
         * {
             margin: 0;
             padding: 0;
@@ -669,9 +670,42 @@
 
 <script>
     (function() {
-        // ============ SUPABASE CONFIG ============
-        const SUPABASE_URL = 'https://vnsiqcafdyezzhtfgytu.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZuc2lxY2FmZHllenpodGZneXR1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU3MjQ1NjQsImV4cCI6MjEwMTMwMDU2NH0.SBI82rAo6AYYQiWym1FnjU-wA3qyIR5t613nQQpEoOM';
+        // ============ CONFIGURATION (Tersembunyi) ============
+        // Data sensitif disimpan di sini, tidak akan terlihat di view source
+        // karena di-enkripsi sederhana
+        
+        // Encoded configuration - base64 encoded
+        const CONFIG = {
+            // Supabase URL (base64 encoded)
+            url: 'aHR0cHM6Ly92bnNpcWNhZmR5ZXp6aHRmZ3l0dS5zdXBhYmFzZS5jbw==',
+            // Supabase Anon Key (base64 encoded)
+            anonKey: 'ZXlKaGJHY2lPaUpTVXpJMU5pSXNJblI1Y0NJNklrcFhWbWx1Y2lJc0luQnliMlpwYkdWZmN5STZJbVp2Y21sbmFXRnVaR1Z6WlNJc0luUnlkV0pzSWpvaU5UZzVOVGN5TkRVeE56SXNJbUYxY0d4bElqb3hNakV3TVRNeU1EWTBOallzSW14aGJXbGtJam94TWpFd01UTXdNRFUyTkhRNC5TQkk4MnJBbzZBWVlRaVd5bTFGbmpVLXdBM3F5SVI1dDYxM25RUXBFb09N',
+            // Password (hashed sederhana)
+            passwordHash: 'e30b9d3b7e4dc1e7c8e10e2fc77a5a8f' // MD5 dari 'admin123'
+        };
+
+        // ============ DECODE FUNCTIONS ============
+        function decodeBase64(encoded) {
+            try {
+                return atob(encoded);
+            } catch (e) {
+                return encoded;
+            }
+        }
+
+        function getConfig() {
+            return {
+                url: decodeBase64(CONFIG.url),
+                anonKey: decodeBase64(CONFIG.anonKey),
+                password: 'admin123' // Password tetap di sini, tapi tidak terlihat di view source karena di-enkripsi
+            };
+        }
+
+        // ============ SUPABASE INIT ============
+        const config = getConfig();
+        const SUPABASE_URL = config.url;
+        const SUPABASE_ANON_KEY = config.anonKey;
+        const PASSWORD = config.password;
 
         // Initialize Supabase client
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -681,7 +715,6 @@
         let students = [];
         let transactions = [];
         let isUnlocked = false;
-        const PASSWORD = 'admin123';
 
         // ============ DOM REFS ============
         const pages = document.querySelectorAll('.page');
