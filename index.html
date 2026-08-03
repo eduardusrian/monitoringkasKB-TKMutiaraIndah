@@ -275,10 +275,19 @@
             font-size: 13px;
             font-weight: 600;
             color: #2a9d8f;
-            min-width: 60px;
+            min-width: 120px;
+            text-align: right;
         }
         .progress-item .status.done {
             color: #2a9d8f;
+        }
+        .progress-item .status .sisa {
+            color: #e76f51;
+            font-weight: 700;
+        }
+        .progress-item .status .lunas-text {
+            color: #2a9d8f;
+            font-weight: 700;
         }
 
         .table-wrap {
@@ -664,6 +673,7 @@
         const SUPABASE_URL = 'https://vnsiqcafdyezzhtfgytu.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZuc2lxY2FmZHllenpodGZneXR1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU3MjQ1NjQsImV4cCI6MjEwMTMwMDU2NH0.SBI82rAo6AYYQiWym1FnjU-wA3qyIR5t613nQQpEoOM';
 
+        // Initialize Supabase client
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         // ============ DATA STATE ============
@@ -711,22 +721,13 @@
         const cancelBtn = document.getElementById('cancelPassword');
         const lockIcon = document.getElementById('lockIcon');
 
-        // ============ LOADING FUNCTIONS ============
-        function showLoading() {
-            // Already shown by default
-        }
-
-        function hideLoading() {
-            // Will be hidden when data loads
-        }
-
         // ============ SUPABASE CRUD OPERATIONS ============
         async function loadStudents() {
             try {
                 const { data, error } = await supabase
                     .from('students')
                     .select('*')
-                    .order('name');
+                    .order('name', { ascending: true });
                 
                 if (error) throw error;
                 students = data || [];
@@ -790,6 +791,16 @@
 
         async function addStudent(name) {
             try {
+                const { data: existing } = await supabase
+                    .from('students')
+                    .select('name')
+                    .eq('name', name)
+                    .single();
+                
+                if (existing) {
+                    throw new Error('Siswa sudah ada');
+                }
+
                 const { data, error } = await supabase
                     .from('students')
                     .insert([{ name, paid: 0 }])
@@ -803,7 +814,7 @@
                 return false;
             } catch (error) {
                 console.error('Error adding student:', error);
-                return false;
+                throw error;
             }
         }
 
@@ -818,7 +829,6 @@
                 if (data && data.length > 0) {
                     transactions.unshift(data[0]);
                     
-                    // Update student paid amount if pemasukan
                     if (transaction.type === 'pemasukan' && transaction.student) {
                         const student = students.find(s => s.name === transaction.student);
                         if (student) {
@@ -835,19 +845,17 @@
                 return false;
             } catch (error) {
                 console.error('Error adding transaction:', error);
-                return false;
+                throw error;
             }
         }
 
         // ============ RENDER FUNCTIONS ============
         async function renderDashboard() {
             try {
-                // Reload data from Supabase
                 await loadStudents();
                 await loadTransactions();
                 await loadTarget();
 
-                // Calculate totals
                 let totalIn = 0, totalOut = 0;
                 transactions.forEach(t => {
                     if (t.type === 'pemasukan') totalIn += t.nominal;
@@ -858,18 +866,28 @@
                 totalOutEl.innerText = 'Rp ' + totalOut.toLocaleString('id-ID');
                 balanceEl.innerText = 'Rp ' + (totalIn - totalOut).toLocaleString('id-ID');
 
-                // Progress siswa
+                // Progress siswa - menampilkan sisa pembayaran
                 let html = '';
                 if (students.length === 0) {
                     html = '<p style="color:#999;">Belum ada siswa</p>';
                 } else {
                     students.forEach(s => {
-                        const pct = globalTarget > 0 ? Math.min(100, Math.round((s.paid / globalTarget) * 100)) : 0;
+                        const paid = s.paid || 0;
+                        const sisa = Math.max(0, globalTarget - paid);
+                        const pct = globalTarget > 0 ? Math.min(100, Math.round((paid / globalTarget) * 100)) : 0;
                         const full = pct >= 100;
+                        
+                        let statusText = '';
+                        if (full) {
+                            statusText = '<span class="lunas-text">✅ Lunas</span>';
+                        } else {
+                            statusText = `<span class="sisa">Sisa: Rp ${sisa.toLocaleString('id-ID')}</span>`;
+                        }
+                        
                         html += `<div class="progress-item">
                             <span class="name">${s.name}</span>
                             <div class="progress-track"><div class="progress-fill ${full?'full':''}" style="width:${pct}%"></div></div>
-                            <span class="status ${full?'done':''}">${full ? '✅ Lunas' : pct+'%'}</span>
+                            <span class="status ${full?'done':''}">${statusText}</span>
                         </div>`;
                     });
                 }
@@ -888,7 +906,6 @@
                 }
                 expenseTableBody.innerHTML = rows;
 
-                // Photo click zoom
                 document.querySelectorAll('.photo-thumb').forEach(img => {
                     img.addEventListener('click', function() {
                         const src = this.dataset.photo;
@@ -896,7 +913,6 @@
                     });
                 });
 
-                // Update target info
                 updateTargetInfo();
             } catch (error) {
                 console.error('Error rendering dashboard:', error);
@@ -967,7 +983,6 @@
         }
 
         // ============ EVENT LISTENERS ============
-        // Navigation
         navItems.forEach(item => {
             item.addEventListener('click', function() {
                 const pageId = this.dataset.page;
@@ -988,7 +1003,6 @@
             });
         });
 
-        // Lock icon
         lockIcon.addEventListener('click', function() {
             if (isUnlocked) {
                 if (confirm('Kunci kembali menu Input & Management?')) {
@@ -1002,7 +1016,6 @@
             }
         });
 
-        // Password modal
         unlockBtn.addEventListener('click', function() {
             const inputPass = passwordInput.value.trim();
             if (inputPass === PASSWORD) {
@@ -1032,7 +1045,6 @@
             }
         });
 
-        // Form: Jenis Input
         jenisInput.addEventListener('change', function() {
             if (this.value === 'pemasukan') {
                 pemasukanFields.classList.remove('hidden');
@@ -1043,13 +1055,11 @@
             }
         });
 
-        // Form: Metode Bayar
         metodeBayar.addEventListener('change', function() {
             if (this.value === 'TF') bankField.classList.remove('hidden');
             else bankField.classList.add('hidden');
         });
 
-        // Submit Transaction
         submitBtn.addEventListener('click', async function() {
             const jenis = jenisInput.value;
             const date = tanggalInput.value;
@@ -1142,7 +1152,6 @@
             submitBtn.innerHTML = '<i class="fas fa-save"></i> Simpan';
         });
 
-        // Add Student
         addStudentBtn.addEventListener('click', async function() {
             const name = newStudentName.value.trim();
             
@@ -1182,7 +1191,6 @@
             addStudentBtn.textContent = 'Tambah Siswa';
         });
 
-        // Set Target
         setTargetBtn.addEventListener('click', async function() {
             const val = parseInt(targetAmount.value);
             if (!val || val <= 0) {
@@ -1212,7 +1220,6 @@
             setTargetBtn.textContent = 'Set Target';
         });
 
-        // Helper functions
         function resetFormFields() {
             const today = new Date().toISOString().slice(0,10);
             tanggalInput.value = today;
@@ -1224,7 +1231,6 @@
             document.getElementById('formMessage').innerHTML = '';
         }
 
-        // Enter key handlers
         targetAmount.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 setTargetBtn.click();
@@ -1237,7 +1243,6 @@
             }
         });
 
-        // Modal Zoom
         closeModal.addEventListener('click', () => modal.classList.remove('open'));
         modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('open'); });
 
@@ -1245,7 +1250,6 @@
         async function init() {
             tanggalInput.value = new Date().toISOString().slice(0,10);
             
-            // Load initial data
             await loadStudents();
             await loadTransactions();
             await loadTarget();
@@ -1255,7 +1259,6 @@
             await renderDashboard();
             await renderManagement();
 
-            // State awal: terkunci
             lockMenu();
         }
 
