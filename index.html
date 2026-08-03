@@ -533,6 +533,16 @@
             text-align: center;
             padding: 20px;
         }
+
+        /* Hilangkan spinner pada input number */
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
     </style>
 </head>
 <body>
@@ -603,23 +613,44 @@
                     <input type="date" id="tanggalInput" required />
                 </div>
                 <div id="pemasukanFields">
-                    <div class="form-group"><label>Nama Siswa</label><select id="namaSiswa"></select></div>
-                    <div class="form-group"><label>Nominal (Rp)</label><input type="number" id="nominalMasuk" placeholder="0" /></div>
+                    <div class="form-group">
+                        <label>Nama Siswa</label>
+                        <select id="namaSiswa">
+                            <option value="">-- Pilih Siswa --</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Nominal (Rp)</label>
+                        <input type="number" id="nominalMasuk" placeholder="Masukkan nominal" />
+                    </div>
                 </div>
                 <div id="pengeluaranFields" class="hidden">
-                    <div class="form-group"><label>Item Pengeluaran</label><input type="text" id="itemPengeluaran" placeholder="contoh: ATK, seragam..." /></div>
-                    <div class="form-group"><label>Nominal (Rp)</label><input type="number" id="nominalKeluar" placeholder="0" /></div>
-                    <div class="form-group"><label>Upload Bukti</label><input type="file" id="buktiPengeluaran" accept="image/*" /></div>
+                    <div class="form-group">
+                        <label>Item Pengeluaran</label>
+                        <input type="text" id="itemPengeluaran" placeholder="contoh: ATK, seragam..." />
+                    </div>
+                    <div class="form-group">
+                        <label>Nominal (Rp)</label>
+                        <input type="number" id="nominalKeluar" placeholder="Masukkan nominal" />
+                    </div>
+                    <div class="form-group">
+                        <label>Upload Bukti</label>
+                        <input type="file" id="buktiPengeluaran" accept="image/*" />
+                    </div>
                 </div>
 
                 <div class="form-row">
-                    <div class="form-group"><label>Metode Pembayaran</label>
+                    <div class="form-group">
+                        <label>Metode Pembayaran</label>
                         <select id="metodeBayar">
                             <option value="Cash">Cash</option>
                             <option value="TF">Transfer</option>
                         </select>
                     </div>
-                    <div class="form-group hidden" id="bankField"><label>Nama Bank</label><input type="text" id="namaBank" placeholder="BCA, Mandiri..." /></div>
+                    <div class="form-group hidden" id="bankField">
+                        <label>Nama Bank</label>
+                        <input type="text" id="namaBank" placeholder="BCA, Mandiri..." />
+                    </div>
                 </div>
                 <button type="button" class="btn" id="submitBtn"><i class="fas fa-save"></i> Simpan</button>
                 <div id="formMessage"></div>
@@ -673,7 +704,6 @@
         const SUPABASE_URL = 'https://vnsiqcafdyezzhtfgytu.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZuc2lxY2FmZHllenpodGZneXR1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU3MjQ1NjQsImV4cCI6MjEwMTMwMDU2NH0.SBI82rAo6AYYQiWym1FnjU-wA3qyIR5t613nQQpEoOM';
 
-        // Initialize Supabase client
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         // ============ DATA STATE ============
@@ -681,7 +711,7 @@
         let students = [];
         let transactions = [];
         let isUnlocked = false;
-        const PASSWORD = 'cimeng90';
+        const PASSWORD = 'admin123';
 
         // ============ DOM REFS ============
         const pages = document.querySelectorAll('.page');
@@ -720,6 +750,31 @@
         const unlockBtn = document.getElementById('unlockBtn');
         const cancelBtn = document.getElementById('cancelPassword');
         const lockIcon = document.getElementById('lockIcon');
+
+        // ============ RESET FORM - CLEAR ALL FIELDS ============
+        function resetFormFields() {
+            const today = new Date().toISOString().slice(0,10);
+            
+            // Reset semua field
+            tanggalInput.value = today;
+            document.getElementById('nominalMasuk').value = '';
+            document.getElementById('nominalKeluar').value = '';
+            document.getElementById('itemPengeluaran').value = '';
+            document.getElementById('namaBank').value = '';
+            document.getElementById('buktiPengeluaran').value = '';
+            document.getElementById('formMessage').innerHTML = '';
+            document.getElementById('formMessage').className = '';
+            
+            // Reset ke default
+            jenisInput.value = 'pemasukan';
+            pemasukanFields.classList.remove('hidden');
+            pengeluaranFields.classList.add('hidden');
+            metodeBayar.value = 'Cash';
+            bankField.classList.add('hidden');
+            
+            // Reset select siswa ke default kosong
+            namaSiswaSelect.innerHTML = '<option value="">-- Pilih Siswa --</option>';
+        }
 
         // ============ SUPABASE CRUD OPERATIONS ============
         async function loadStudents() {
@@ -941,7 +996,10 @@
         }
 
         function populateStudentSelect() {
-            namaSiswaSelect.innerHTML = '';
+            // Reset dulu ke default
+            namaSiswaSelect.innerHTML = '<option value="">-- Pilih Siswa --</option>';
+            
+            // Tambahkan data siswa
             students.forEach(s => {
                 const opt = document.createElement('option');
                 opt.value = s.name;
@@ -1000,6 +1058,13 @@
                 
                 if (pageId === 'dashboard') renderDashboard();
                 if (pageId === 'management') renderManagement();
+                
+                // Reset form setiap kali halaman input di-load
+                if (pageId === 'input') {
+                    resetFormFields();
+                    // Populate ulang siswa
+                    populateStudentSelect();
+                }
             });
         });
 
@@ -1075,6 +1140,13 @@
                     const student = document.getElementById('namaSiswa').value;
                     const nominal = parseInt(document.getElementById('nominalMasuk').value);
                     
+                    if (!student || student === '' || student === '-- Pilih Siswa --') {
+                        formMessage.innerHTML = '<span class="error-msg">Pilih siswa terlebih dahulu</span>';
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = '<i class="fas fa-save"></i> Simpan';
+                        return;
+                    }
+                    
                     if (!nominal || nominal <= 0) {
                         formMessage.innerHTML = '<span class="error-msg">Masukkan nominal valid</span>';
                         submitBtn.disabled = false;
@@ -1096,6 +1168,7 @@
                     if (success) {
                         formMessage.innerHTML = '<span class="success-msg">✅ Pemasukan berhasil!</span>';
                         resetFormFields();
+                        populateStudentSelect();
                         await renderDashboard();
                     } else {
                         formMessage.innerHTML = '<span class="error-msg">❌ Gagal menyimpan data</span>';
@@ -1138,6 +1211,7 @@
                     if (success) {
                         formMessage.innerHTML = '<span class="success-msg">✅ Pengeluaran berhasil!</span>';
                         resetFormFields();
+                        populateStudentSelect();
                         await renderDashboard();
                     } else {
                         formMessage.innerHTML = '<span class="error-msg">❌ Gagal menyimpan data</span>';
@@ -1220,17 +1294,6 @@
             setTargetBtn.textContent = 'Set Target';
         });
 
-        function resetFormFields() {
-            const today = new Date().toISOString().slice(0,10);
-            tanggalInput.value = today;
-            document.getElementById('nominalMasuk').value = '';
-            document.getElementById('nominalKeluar').value = '';
-            document.getElementById('itemPengeluaran').value = '';
-            document.getElementById('namaBank').value = '';
-            document.getElementById('buktiPengeluaran').value = '';
-            document.getElementById('formMessage').innerHTML = '';
-        }
-
         targetAmount.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 setTargetBtn.click();
@@ -1248,8 +1311,10 @@
 
         // ============ INIT ============
         async function init() {
-            tanggalInput.value = new Date().toISOString().slice(0,10);
+            // Reset form ke default (CLEAR semua)
+            resetFormFields();
             
+            // Load initial data
             await loadStudents();
             await loadTransactions();
             await loadTarget();
@@ -1259,6 +1324,7 @@
             await renderDashboard();
             await renderManagement();
 
+            // State awal: terkunci
             lockMenu();
         }
 
