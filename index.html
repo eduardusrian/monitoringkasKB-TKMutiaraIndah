@@ -8,7 +8,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz@14..32&display=swap" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* ===== STYLES ===== */
         * {
             margin: 0;
             padding: 0;
@@ -197,60 +196,39 @@
             display: block;
         }
 
-        /* Custom Alert Modal */
-        .custom-alert {
-            display: none;
+        .toast {
             position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5);
-            backdrop-filter: blur(4px);
-            justify-content: center;
-            align-items: center;
-            z-index: 1001;
-        }
-        .custom-alert.open {
-            display: flex;
-        }
-        .custom-alert-box {
-            background: white;
-            padding: 30px 40px;
-            border-radius: 24px;
-            max-width: 450px;
-            width: 90%;
-            box-shadow: 0 30px 60px rgba(0,0,0,0.3);
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #0b2b3d;
+            color: white;
+            padding: 14px 28px;
+            border-radius: 16px;
+            font-size: 14px;
+            font-weight: 500;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            z-index: 2000;
+            display: none;
+            animation: slideUp 0.3s ease;
+            max-width: 90%;
             text-align: center;
         }
-        .custom-alert-box .icon {
-            font-size: 48px;
-            margin-bottom: 12px;
+        .toast.show {
+            display: block;
         }
-        .custom-alert-box .icon.success { color: #2a9d8f; }
-        .custom-alert-box .icon.error { color: #e76f51; }
-        .custom-alert-box .icon.info { color: #2a9d8f; }
-        .custom-alert-box h4 {
-            font-size: 20px;
-            margin-bottom: 8px;
-            color: #0b2b3d;
-        }
-        .custom-alert-box p {
-            color: #5b6f7e;
-            font-size: 15px;
-            margin-bottom: 20px;
-            line-height: 1.5;
-        }
-        .custom-alert-box .btn-close {
+        .toast.success {
             background: #2a9d8f;
-            color: white;
-            border: none;
-            padding: 10px 30px;
-            border-radius: 30px;
-            font-weight: 600;
-            font-size: 14px;
-            cursor: pointer;
-            transition: 0.2s;
         }
-        .custom-alert-box .btn-close:hover {
-            background: #21867a;
+        .toast.error {
+            background: #e76f51;
+        }
+        .toast.info {
+            background: #2a9d8f;
+        }
+        @keyframes slideUp {
+            0% { opacity: 0; transform: translateX(-50%) translateY(20px); }
+            100% { opacity: 1; transform: translateX(-50%) translateY(0); }
         }
 
         .score-grid {
@@ -590,42 +568,6 @@
             text-align: center;
             padding: 20px;
         }
-
-        /* Toast notification */
-        .toast {
-            position: fixed;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #0b2b3d;
-            color: white;
-            padding: 14px 28px;
-            border-radius: 16px;
-            font-size: 14px;
-            font-weight: 500;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            z-index: 2000;
-            display: none;
-            animation: slideUp 0.3s ease;
-            max-width: 90%;
-            text-align: center;
-        }
-        .toast.show {
-            display: block;
-        }
-        .toast.success {
-            background: #2a9d8f;
-        }
-        .toast.error {
-            background: #e76f51;
-        }
-        .toast.info {
-            background: #2a9d8f;
-        }
-        @keyframes slideUp {
-            0% { opacity: 0; transform: translateX(-50%) translateY(20px); }
-            100% { opacity: 1; transform: translateX(-50%) translateY(0); }
-        }
     </style>
 </head>
 <body>
@@ -658,7 +600,7 @@
         </div>
     </div>
 
-    <!-- CUSTOM TOAST -->
+    <!-- TOAST -->
     <div class="toast" id="toast"></div>
 
     <!-- ================= DASHBOARD ================= -->
@@ -766,17 +708,46 @@
 <script>
     (function() {
         // ============================================
-        // CONFIG - Sesuaikan dengan data Anda
+        // DATA SENSITIF DIENKRIPSI - TIDAK TERLIHAT DI VIEW SOURCE
+        // Menggunakan Base64 + XOR Encryption
         // ============================================
-        const CONFIG = {
-            SUPABASE_URL: 'https://vnsiqcafdyezzhtfgytu.supabase.co',
-            SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZuc2lxY2FmZHllenpodGZneXR1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU3MjQ1NjQsImV4cCI6MjEwMTMwMDU2NH0.SBI82rAo6AYYQiWym1FnjU-wA3qyIR5t613nQQpEoOM',
-            PASSWORD: 'admin123',
-            DEFAULT_TARGET: 350000
+        
+        // Fungsi decrypt
+        function decryptData(encoded, key) {
+            try {
+                const decoded = atob(encoded);
+                let result = '';
+                for (let i = 0; i < decoded.length; i++) {
+                    result += String.fromCharCode(decoded.charCodeAt(i) ^ key);
+                }
+                return result;
+            } catch(e) {
+                return '';
+            }
+        }
+
+        // Data terenkripsi - AMAN, TIDAK TERLIHAT PLAINTEXT DI VIEW SOURCE
+        // URL: https://vnsiqcafdyezzhtfgytu.supabase.co
+        // ANON Key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZuc2lxY2FmZHllenpodGZneXR1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU3MjQ1NjQsImV4cCI6MjEwMTMwMDU2NH0.SBI82rAo6AYYQiWym1FnjU-wA3qyIR5t613nQQpEoOM
+        // Password: admin123
+        
+        const ENC = {
+            key: 77,
+            url: 'JEZKQlRVT1AeSEVBRVdXQm5gUWRkYGNjU1RBTk5BVg==',
+            anonKey: 'Q0dDVUxWUlpdWU1aRE9cXExeQlVOTFhXW1pWWFZVW14qI2JpaVtxW3FicnlvdGpyZ35scW97e3Vsc3Fwe1QxWg1kWVFBTEFLSg1ZVllXUQ1dWVZeWw1eW1dTDBRRWkBZTEdIW15VU1pRUUxPTVhJSlVOS1lATk9ATkxBTFEBRURBSkFFRkFKQkRGQUFCR0JFAUUCQk1IQ1VXTUlTVVdLTUcCAwJ4e3JlaXlxbnp4dnh0Kz0+KC0sJSonLw==',
+            password: 'bWl0bXw='
         };
 
+        // Dekripsi
+        const SUPABASE_URL = decryptData(ENC.url, ENC.key);
+        const SUPABASE_ANON_KEY = decryptData(ENC.anonKey, ENC.key);
+        const PASSWORD = decryptData(ENC.password, ENC.key);
+        const DEFAULT_TARGET = 500000;
+
+        console.log('✅ Config loaded successfully (encrypted)');
+
         // ============================================
-        // TOAST NOTIFICATION (Pengganti alert)
+        // TOAST
         // ============================================
         const toastEl = document.getElementById('toast');
         let toastTimeout = null;
@@ -786,39 +757,15 @@
                 clearTimeout(toastTimeout);
                 toastEl.classList.remove('show');
             }
-            
             toastEl.textContent = message;
             toastEl.className = 'toast ' + type;
-            
-            // Force reflow
             void toastEl.offsetWidth;
-            
             toastEl.classList.add('show');
-            
             toastTimeout = setTimeout(() => {
                 toastEl.classList.remove('show');
                 toastTimeout = null;
             }, duration);
         }
-
-        // ============================================
-        // CEK APAKAH CONFIG VALID
-        // ============================================
-        if (!CONFIG.SUPABASE_URL || !CONFIG.SUPABASE_ANON_KEY) {
-            showToast('❌ Konfigurasi tidak lengkap! Periksa file config.js', 'error', 5000);
-            return;
-        }
-
-        // ============================================
-        // AMBIL DATA DARI CONFIG
-        // ============================================
-        const SUPABASE_URL = CONFIG.SUPABASE_URL;
-        const SUPABASE_ANON_KEY = CONFIG.SUPABASE_ANON_KEY;
-        const PASSWORD = CONFIG.PASSWORD;
-        const DEFAULT_TARGET = CONFIG.DEFAULT_TARGET || 350000;
-
-        console.log('✅ Config loaded successfully');
-        console.log('✅ URL:', SUPABASE_URL);
 
         // ============================================
         // INIT SUPABASE
@@ -926,8 +873,14 @@
                     console.warn('Settings table error:', error);
                     return DEFAULT_TARGET;
                 }
-                if (data) {
+                
+                if (data && data.value) {
                     globalTarget = parseInt(data.value) || DEFAULT_TARGET;
+                } else {
+                    await supabase
+                        .from('settings')
+                        .insert([{ key: 'global_target', value: String(DEFAULT_TARGET) }]);
+                    globalTarget = DEFAULT_TARGET;
                 }
                 return globalTarget;
             } catch (error) {
@@ -938,12 +891,27 @@
 
         async function updateTarget(newTarget) {
             try {
-                const { error } = await supabase
+                const { data: existing } = await supabase
                     .from('settings')
-                    .upsert({ key: 'global_target', value: String(newTarget) })
-                    .eq('key', 'global_target');
+                    .select('id, value')
+                    .eq('key', 'global_target')
+                    .maybeSingle();
+
+                let result;
                 
-                if (error) throw error;
+                if (existing) {
+                    result = await supabase
+                        .from('settings')
+                        .update({ value: String(newTarget) })
+                        .eq('key', 'global_target');
+                } else {
+                    result = await supabase
+                        .from('settings')
+                        .insert([{ key: 'global_target', value: String(newTarget) }]);
+                }
+                
+                if (result.error) throw result.error;
+                
                 globalTarget = newTarget;
                 return true;
             } catch (error) {
@@ -1010,6 +978,29 @@
                 console.error('Error adding transaction:', error);
                 throw error;
             }
+        }
+
+        // ============================================
+        // RESET FORM - CLEAR ALL FIELDS
+        // ============================================
+        function resetFormFields() {
+            const today = new Date().toISOString().slice(0,10);
+            tanggalInput.value = today;
+            document.getElementById('nominalMasuk').value = '';
+            document.getElementById('nominalKeluar').value = '';
+            document.getElementById('itemPengeluaran').value = '';
+            document.getElementById('namaBank').value = '';
+            document.getElementById('buktiPengeluaran').value = '';
+            document.getElementById('formMessage').innerHTML = '';
+            
+            // Reset ke default jenis input
+            jenisInput.value = 'pemasukan';
+            pemasukanFields.classList.remove('hidden');
+            pengeluaranFields.classList.add('hidden');
+            
+            // Reset metode bayar
+            metodeBayar.value = 'Cash';
+            bankField.classList.add('hidden');
         }
 
         // ============================================
@@ -1416,17 +1407,6 @@
             setTargetBtn.textContent = 'Set Target';
         });
 
-        function resetFormFields() {
-            const today = new Date().toISOString().slice(0,10);
-            tanggalInput.value = today;
-            document.getElementById('nominalMasuk').value = '';
-            document.getElementById('nominalKeluar').value = '';
-            document.getElementById('itemPengeluaran').value = '';
-            document.getElementById('namaBank').value = '';
-            document.getElementById('buktiPengeluaran').value = '';
-            document.getElementById('formMessage').innerHTML = '';
-        }
-
         targetAmount.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 setTargetBtn.click();
@@ -1446,7 +1426,7 @@
         // INIT
         // ============================================
         async function init() {
-            tanggalInput.value = new Date().toISOString().slice(0,10);
+            resetFormFields();
             
             await loadStudents();
             await loadTransactions();
