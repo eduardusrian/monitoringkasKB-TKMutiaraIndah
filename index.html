@@ -242,44 +242,62 @@
             color: #1e3b4a;
             margin-bottom: 16px;
         }
+
+        /* ===== STYLE VISUAL BULANAN ===== */
         .progress-item {
             display: flex;
             align-items: center;
             gap: 12px;
-            margin-bottom: 12px;
+            margin-bottom: 14px;
             flex-wrap: wrap;
+            padding: 8px 12px;
+            background: white;
+            border-radius: 12px;
+            border: 1px solid #eef2f6;
         }
         .progress-item .name {
-            width: 130px;
-            font-weight: 500;
+            width: 120px;
+            font-weight: 600;
             color: #1a3340;
+            font-size: 14px;
         }
-        .progress-track {
+        .progress-item .month-container {
+            display: flex;
+            gap: 4px;
             flex: 1;
-            height: 10px;
-            background: #e5eaef;
-            border-radius: 20px;
-            overflow: hidden;
-            min-width: 120px;
+            flex-wrap: wrap;
         }
-        .progress-fill {
-            height: 100%;
-            background: #2a9d8f;
-            border-radius: 20px;
-            transition: width 0.3s;
+        .progress-item .month-box {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 600;
+            border: 2px solid #dce2ea;
+            background: #f5f7fa;
+            color: #aab3bc;
+            transition: 0.2s;
         }
-        .progress-fill.full {
+        .progress-item .month-box.paid {
             background: #2a9d8f;
+            border-color: #2a9d8f;
+            color: white;
+        }
+        .progress-item .month-box.paid::after {
+            content: "✓";
+        }
+        .progress-item .month-box .month-label {
+            display: none;
         }
         .progress-item .status {
             font-size: 13px;
             font-weight: 600;
-            color: #2a9d8f;
-            min-width: 120px;
+            min-width: 140px;
             text-align: right;
-        }
-        .progress-item .status.done {
-            color: #2a9d8f;
+            color: #5b6f7e;
         }
         .progress-item .status .sisa {
             color: #e76f51;
@@ -288,6 +306,11 @@
         .progress-item .status .lunas-text {
             color: #2a9d8f;
             font-weight: 700;
+        }
+        .progress-item .status .bulan-text {
+            font-weight: 400;
+            font-size: 12px;
+            color: #8899a8;
         }
 
         .table-wrap {
@@ -451,6 +474,15 @@
             .management-grid { grid-template-columns: 1fr; }
             .navbar { flex-direction: column; align-items: stretch; gap: 12px; }
             .nav-links { justify-content: space-around; }
+            .progress-item .month-box {
+                width: 28px;
+                height: 28px;
+                font-size: 10px;
+            }
+            .progress-item .name {
+                width: 100px;
+                font-size: 13px;
+            }
         }
 
         .student-list {
@@ -534,7 +566,6 @@
             padding: 20px;
         }
 
-        /* Hilangkan spinner pada input number */
         input[type="number"]::-webkit-inner-spin-button,
         input[type="number"]::-webkit-outer-spin-button {
             -webkit-appearance: none;
@@ -542,6 +573,25 @@
         }
         input[type="number"] {
             -moz-appearance: textfield;
+        }
+
+        .tooltip {
+            position: relative;
+            cursor: help;
+        }
+        .tooltip:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #0b2b3d;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            white-space: nowrap;
+            z-index: 10;
         }
     </style>
 </head>
@@ -584,7 +634,7 @@
         </div>
 
         <div class="progress-section">
-            <h3><i class="fas fa-user-graduate"></i> Skala Pembayaran per Siswa</h3>
+            <h3><i class="fas fa-calendar-alt"></i> Skala Pembayaran per Siswa (Agustus 2026 - Mei 2027)</h3>
             <div id="progressList"><div class="loading-text">Loading data siswa...</div></div>
         </div>
 
@@ -604,6 +654,7 @@
                 <div class="form-group">
                     <label>Jenis Input</label>
                     <select id="jenisInput" required>
+                        <option value="">-- Pilih Jenis --</option>
                         <option value="pemasukan">Pemasukan</option>
                         <option value="pengeluaran">Pengeluaran</option>
                     </select>
@@ -612,7 +663,7 @@
                     <label>Tanggal</label>
                     <input type="date" id="tanggalInput" required />
                 </div>
-                <div id="pemasukanFields">
+                <div id="pemasukanFields" class="hidden">
                     <div class="form-group">
                         <label>Nama Siswa</label>
                         <select id="namaSiswa">
@@ -643,6 +694,7 @@
                     <div class="form-group">
                         <label>Metode Pembayaran</label>
                         <select id="metodeBayar">
+                            <option value="">-- Pilih Metode --</option>
                             <option value="Cash">Cash</option>
                             <option value="TF">Transfer</option>
                         </select>
@@ -674,7 +726,7 @@
                     <h3><i class="fas fa-bullseye"></i> Target Pembayaran</h3>
                     <div class="target-setting">
                         <label>Target per Siswa (Rp)</label>
-                        <input type="number" id="targetAmount" placeholder="Contoh: 500000" />
+                        <input type="number" id="targetAmount" placeholder="Contoh: 350000" />
                         <button type="button" class="btn-small" id="setTargetBtn">Set Target</button>
                         <span class="target-info" id="currentTargetInfo">Target saat ini: Loading...</span>
                     </div>
@@ -707,7 +759,25 @@
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         // ============ DATA STATE ============
-        let globalTarget = 500000;
+        const MONTHLY_FEE = 35000;
+        const TOTAL_MONTHS = 10;
+        const DEFAULT_TARGET = MONTHLY_FEE * TOTAL_MONTHS;
+
+        // Daftar bulan untuk display
+        const BULAN_LIST = [
+            { bulan: 'Agt', tahun: '2026', full: 'Agustus 2026' },
+            { bulan: 'Sep', tahun: '2026', full: 'September 2026' },
+            { bulan: 'Okt', tahun: '2026', full: 'Oktober 2026' },
+            { bulan: 'Nov', tahun: '2026', full: 'November 2026' },
+            { bulan: 'Des', tahun: '2026', full: 'Desember 2026' },
+            { bulan: 'Jan', tahun: '2027', full: 'Januari 2027' },
+            { bulan: 'Feb', tahun: '2027', full: 'Februari 2027' },
+            { bulan: 'Mar', tahun: '2027', full: 'Maret 2027' },
+            { bulan: 'Apr', tahun: '2027', full: 'April 2027' },
+            { bulan: 'Mei', tahun: '2027', full: 'Mei 2027' }
+        ];
+
+        let globalTarget = DEFAULT_TARGET;
         let students = [];
         let transactions = [];
         let isUnlocked = false;
@@ -751,11 +821,10 @@
         const cancelBtn = document.getElementById('cancelPassword');
         const lockIcon = document.getElementById('lockIcon');
 
-        // ============ RESET FORM - CLEAR ALL FIELDS ============
+        // ============ RESET FORM ============
         function resetFormFields() {
             const today = new Date().toISOString().slice(0,10);
             
-            // Reset semua field
             tanggalInput.value = today;
             document.getElementById('nominalMasuk').value = '';
             document.getElementById('nominalKeluar').value = '';
@@ -765,18 +834,16 @@
             document.getElementById('formMessage').innerHTML = '';
             document.getElementById('formMessage').className = '';
             
-            // Reset ke default
-            jenisInput.value = 'pemasukan';
-            pemasukanFields.classList.remove('hidden');
+            jenisInput.value = '';
+            pemasukanFields.classList.add('hidden');
             pengeluaranFields.classList.add('hidden');
-            metodeBayar.value = 'Cash';
+            metodeBayar.value = '';
             bankField.classList.add('hidden');
             
-            // Reset select siswa ke default kosong
             namaSiswaSelect.innerHTML = '<option value="">-- Pilih Siswa --</option>';
         }
 
-        // ============ SUPABASE CRUD OPERATIONS ============
+        // ============ SUPABASE CRUD ============
         async function loadStudents() {
             try {
                 const { data, error } = await supabase
@@ -819,12 +886,12 @@
                 
                 if (error) throw error;
                 if (data) {
-                    globalTarget = parseInt(data.value) || 500000;
+                    globalTarget = parseInt(data.value) || DEFAULT_TARGET;
                 }
                 return globalTarget;
             } catch (error) {
                 console.error('Error loading target:', error);
-                return 500000;
+                return DEFAULT_TARGET;
             }
         }
 
@@ -921,29 +988,47 @@
                 totalOutEl.innerText = 'Rp ' + totalOut.toLocaleString('id-ID');
                 balanceEl.innerText = 'Rp ' + (totalIn - totalOut).toLocaleString('id-ID');
 
-                // Progress siswa - menampilkan sisa pembayaran
+                // ===== VISUAL BULANAN =====
                 let html = '';
                 if (students.length === 0) {
                     html = '<p style="color:#999;">Belum ada siswa</p>';
                 } else {
                     students.forEach(s => {
                         const paid = s.paid || 0;
-                        const sisa = Math.max(0, globalTarget - paid);
-                        const pct = globalTarget > 0 ? Math.min(100, Math.round((paid / globalTarget) * 100)) : 0;
-                        const full = pct >= 100;
-                        
+                        const bulanLunas = Math.min(Math.floor(paid / MONTHLY_FEE), TOTAL_MONTHS);
+                        const sisaBulan = TOTAL_MONTHS - bulanLunas;
+                        const sisaRupiah = sisaBulan * MONTHLY_FEE;
+                        const isFull = bulanLunas >= TOTAL_MONTHS;
+
+                        // Build month boxes
+                        let monthHtml = '';
+                        BULAN_LIST.forEach((b, index) => {
+                            const isPaid = index < bulanLunas;
+                            monthHtml += `
+                                <div class="month-box ${isPaid ? 'paid' : ''}" 
+                                     data-tooltip="${b.full}">
+                                </div>
+                            `;
+                        });
+
                         let statusText = '';
-                        if (full) {
-                            statusText = '<span class="lunas-text">✅ Lunas</span>';
+                        if (isFull) {
+                            statusText = `<span class="lunas-text">✅ Lunas (10/10)</span>`;
                         } else {
-                            statusText = `<span class="sisa">Sisa: Rp ${sisa.toLocaleString('id-ID')}</span>`;
+                            statusText = `
+                                <span class="sisa">Sisa ${sisaBulan} bulan</span>
+                                <br/>
+                                <span class="bulan-text">Rp ${sisaRupiah.toLocaleString('id-ID')}</span>
+                            `;
                         }
-                        
-                        html += `<div class="progress-item">
-                            <span class="name">${s.name}</span>
-                            <div class="progress-track"><div class="progress-fill ${full?'full':''}" style="width:${pct}%"></div></div>
-                            <span class="status ${full?'done':''}">${statusText}</span>
-                        </div>`;
+
+                        html += `
+                            <div class="progress-item">
+                                <span class="name">${s.name}</span>
+                                <div class="month-container">${monthHtml}</div>
+                                <span class="status ${isFull ? 'done' : ''}">${statusText}</span>
+                            </div>
+                        `;
                     });
                 }
                 progressList.innerHTML = html;
@@ -996,10 +1081,7 @@
         }
 
         function populateStudentSelect() {
-            // Reset dulu ke default
             namaSiswaSelect.innerHTML = '<option value="">-- Pilih Siswa --</option>';
-            
-            // Tambahkan data siswa
             students.forEach(s => {
                 const opt = document.createElement('option');
                 opt.value = s.name;
@@ -1009,11 +1091,12 @@
         }
 
         function updateTargetInfo() {
-            currentTargetInfo.textContent = `Target saat ini: Rp ${globalTarget.toLocaleString('id-ID')}`;
+            const totalBulan = Math.floor(globalTarget / MONTHLY_FEE);
+            currentTargetInfo.textContent = `Target: Rp ${globalTarget.toLocaleString('id-ID')} (${totalBulan} bulan × Rp ${MONTHLY_FEE.toLocaleString('id-ID')})`;
             targetAmount.value = globalTarget;
         }
 
-        // ============ LOCK/UNLOCK FUNCTIONS ============
+        // ============ LOCK/UNLOCK ============
         function unlockMenu() {
             isUnlocked = true;
             hiddenNavs.forEach(nav => nav.classList.add('show'));
@@ -1058,11 +1141,8 @@
                 
                 if (pageId === 'dashboard') renderDashboard();
                 if (pageId === 'management') renderManagement();
-                
-                // Reset form setiap kali halaman input di-load
                 if (pageId === 'input') {
                     resetFormFields();
-                    // Populate ulang siswa
                     populateStudentSelect();
                 }
             });
@@ -1114,9 +1194,12 @@
             if (this.value === 'pemasukan') {
                 pemasukanFields.classList.remove('hidden');
                 pengeluaranFields.classList.add('hidden');
-            } else {
+            } else if (this.value === 'pengeluaran') {
                 pemasukanFields.classList.add('hidden');
                 pengeluaranFields.classList.remove('hidden');
+            } else {
+                pemasukanFields.classList.add('hidden');
+                pengeluaranFields.classList.add('hidden');
             }
         });
 
@@ -1131,6 +1214,15 @@
             const method = metodeBayar.value;
             const bank = document.getElementById('namaBank').value.trim();
             const formMessage = document.getElementById('formMessage');
+
+            if (!jenis) {
+                formMessage.innerHTML = '<span class="error-msg">Pilih jenis input terlebih dahulu</span>';
+                return;
+            }
+            if (!method) {
+                formMessage.innerHTML = '<span class="error-msg">Pilih metode pembayaran</span>';
+                return;
+            }
 
             submitBtn.disabled = true;
             submitBtn.textContent = 'Menyimpan...';
@@ -1311,10 +1403,8 @@
 
         // ============ INIT ============
         async function init() {
-            // Reset form ke default (CLEAR semua)
             resetFormFields();
             
-            // Load initial data
             await loadStudents();
             await loadTransactions();
             await loadTarget();
@@ -1324,7 +1414,6 @@
             await renderDashboard();
             await renderManagement();
 
-            // State awal: terkunci
             lockMenu();
         }
 
