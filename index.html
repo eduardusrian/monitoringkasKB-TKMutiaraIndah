@@ -196,41 +196,6 @@
             display: block;
         }
 
-        .toast {
-            position: fixed;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #0b2b3d;
-            color: white;
-            padding: 14px 28px;
-            border-radius: 16px;
-            font-size: 14px;
-            font-weight: 500;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            z-index: 2000;
-            display: none;
-            animation: slideUp 0.3s ease;
-            max-width: 90%;
-            text-align: center;
-        }
-        .toast.show {
-            display: block;
-        }
-        .toast.success {
-            background: #2a9d8f;
-        }
-        .toast.error {
-            background: #e76f51;
-        }
-        .toast.info {
-            background: #2a9d8f;
-        }
-        @keyframes slideUp {
-            0% { opacity: 0; transform: translateX(-50%) translateY(20px); }
-            100% { opacity: 1; transform: translateX(-50%) translateY(0); }
-        }
-
         .score-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -600,9 +565,6 @@
         </div>
     </div>
 
-    <!-- TOAST -->
-    <div class="toast" id="toast"></div>
-
     <!-- ================= DASHBOARD ================= -->
     <div id="dashboard" class="page active">
         <div class="score-grid" id="scoreCards">
@@ -707,82 +669,21 @@
 
 <script>
     (function() {
-        // ============================================
-        // DATA SENSITIF DIENKRIPSI - TIDAK TERLIHAT DI VIEW SOURCE
-        // Menggunakan Base64 + XOR Encryption
-        // ============================================
-        
-        // Fungsi decrypt
-        function decryptData(encoded, key) {
-            try {
-                const decoded = atob(encoded);
-                let result = '';
-                for (let i = 0; i < decoded.length; i++) {
-                    result += String.fromCharCode(decoded.charCodeAt(i) ^ key);
-                }
-                return result;
-            } catch(e) {
-                return '';
-            }
-        }
+        // ============ SUPABASE CONFIG ============
+        const SUPABASE_URL = 'https://vnsiqcafdyezzhtfgytu.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZuc2lxY2FmZHllenpodGZneXR1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU3MjQ1NjQsImV4cCI6MjEwMTMwMDU2NH0.SBI82rAo6AYYQiWym1FnjU-wA3qyIR5t613nQQpEoOM';
 
-        // Data terenkripsi - AMAN, TIDAK TERLIHAT PLAINTEXT DI VIEW SOURCE
-        // URL: https://vnsiqcafdyezzhtfgytu.supabase.co
-        // ANON Key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZuc2lxY2FmZHllenpodGZneXR1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU3MjQ1NjQsImV4cCI6MjEwMTMwMDU2NH0.SBI82rAo6AYYQiWym1FnjU-wA3qyIR5t613nQQpEoOM
-        // Password: admin123
-        
-        const ENC = {
-            key: 77,
-            url: 'JEZKQlRVT1AeSEVBRVdXQm5gUWRkYGNjU1RBTk5BVg==',
-            anonKey: 'Q0dDVUxWUlpdWU1aRE9cXExeQlVOTFhXW1pWWFZVW14qI2JpaVtxW3FicnlvdGpyZ35scW97e3Vsc3Fwe1QxWg1kWVFBTEFLSg1ZVllXUQ1dWVZeWw1eW1dTDBRRWkBZTEdIW15VU1pRUUxPTVhJSlVOS1lATk9ATkxBTFEBRURBSkFFRkFKQkRGQUFCR0JFAUUCQk1IQ1VXTUlTVVdLTUcCAwJ4e3JlaXlxbnp4dnh0Kz0+KC0sJSonLw==',
-            password: 'bWl0bXw='
-        };
-
-        // Dekripsi
-        const SUPABASE_URL = decryptData(ENC.url, ENC.key);
-        const SUPABASE_ANON_KEY = decryptData(ENC.anonKey, ENC.key);
-        const PASSWORD = decryptData(ENC.password, ENC.key);
-        const DEFAULT_TARGET = 500000;
-
-        console.log('✅ Config loaded successfully (encrypted)');
-
-        // ============================================
-        // TOAST
-        // ============================================
-        const toastEl = document.getElementById('toast');
-        let toastTimeout = null;
-
-        function showToast(message, type = 'info', duration = 3000) {
-            if (toastTimeout) {
-                clearTimeout(toastTimeout);
-                toastEl.classList.remove('show');
-            }
-            toastEl.textContent = message;
-            toastEl.className = 'toast ' + type;
-            void toastEl.offsetWidth;
-            toastEl.classList.add('show');
-            toastTimeout = setTimeout(() => {
-                toastEl.classList.remove('show');
-                toastTimeout = null;
-            }, duration);
-        }
-
-        // ============================================
-        // INIT SUPABASE
-        // ============================================
+        // Initialize Supabase client
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // ============================================
-        // DATA STATE
-        // ============================================
-        let globalTarget = DEFAULT_TARGET;
+        // ============ DATA STATE ============
+        let globalTarget = 500000;
         let students = [];
         let transactions = [];
         let isUnlocked = false;
+        const PASSWORD = 'admin123';
 
-        // ============================================
-        // DOM REFS
-        // ============================================
+        // ============ DOM REFS ============
         const pages = document.querySelectorAll('.page');
         const navItems = document.querySelectorAll('.nav-links li');
         const hiddenNavs = document.querySelectorAll('.hidden-nav');
@@ -820,9 +721,7 @@
         const cancelBtn = document.getElementById('cancelPassword');
         const lockIcon = document.getElementById('lockIcon');
 
-        // ============================================
-        // SUPABASE CRUD OPERATIONS
-        // ============================================
+        // ============ SUPABASE CRUD OPERATIONS ============
         async function loadStudents() {
             try {
                 const { data, error } = await supabase
@@ -830,14 +729,11 @@
                     .select('*')
                     .order('name', { ascending: true });
                 
-                if (error) {
-                    console.warn('Students table error:', error);
-                    return [];
-                }
+                if (error) throw error;
                 students = data || [];
                 return students;
             } catch (error) {
-                console.warn('Error loading students:', error);
+                console.error('Error loading students:', error);
                 return [];
             }
         }
@@ -849,14 +745,11 @@
                     .select('*')
                     .order('date', { ascending: false });
                 
-                if (error) {
-                    console.warn('Transactions table error:', error);
-                    return [];
-                }
+                if (error) throw error;
                 transactions = data || [];
                 return transactions;
             } catch (error) {
-                console.warn('Error loading transactions:', error);
+                console.error('Error loading transactions:', error);
                 return [];
             }
         }
@@ -867,51 +760,27 @@
                     .from('settings')
                     .select('value')
                     .eq('key', 'global_target')
-                    .maybeSingle();
+                    .single();
                 
-                if (error) {
-                    console.warn('Settings table error:', error);
-                    return DEFAULT_TARGET;
-                }
-                
-                if (data && data.value) {
-                    globalTarget = parseInt(data.value) || DEFAULT_TARGET;
-                } else {
-                    await supabase
-                        .from('settings')
-                        .insert([{ key: 'global_target', value: String(DEFAULT_TARGET) }]);
-                    globalTarget = DEFAULT_TARGET;
+                if (error) throw error;
+                if (data) {
+                    globalTarget = parseInt(data.value) || 500000;
                 }
                 return globalTarget;
             } catch (error) {
-                console.warn('Error loading target:', error);
-                return DEFAULT_TARGET;
+                console.error('Error loading target:', error);
+                return 500000;
             }
         }
 
         async function updateTarget(newTarget) {
             try {
-                const { data: existing } = await supabase
+                const { error } = await supabase
                     .from('settings')
-                    .select('id, value')
-                    .eq('key', 'global_target')
-                    .maybeSingle();
-
-                let result;
+                    .update({ value: String(newTarget) })
+                    .eq('key', 'global_target');
                 
-                if (existing) {
-                    result = await supabase
-                        .from('settings')
-                        .update({ value: String(newTarget) })
-                        .eq('key', 'global_target');
-                } else {
-                    result = await supabase
-                        .from('settings')
-                        .insert([{ key: 'global_target', value: String(newTarget) }]);
-                }
-                
-                if (result.error) throw result.error;
-                
+                if (error) throw error;
                 globalTarget = newTarget;
                 return true;
             } catch (error) {
@@ -926,7 +795,7 @@
                     .from('students')
                     .select('name')
                     .eq('name', name)
-                    .maybeSingle();
+                    .single();
                 
                 if (existing) {
                     throw new Error('Siswa sudah ada');
@@ -980,32 +849,7 @@
             }
         }
 
-        // ============================================
-        // RESET FORM - CLEAR ALL FIELDS
-        // ============================================
-        function resetFormFields() {
-            const today = new Date().toISOString().slice(0,10);
-            tanggalInput.value = today;
-            document.getElementById('nominalMasuk').value = '';
-            document.getElementById('nominalKeluar').value = '';
-            document.getElementById('itemPengeluaran').value = '';
-            document.getElementById('namaBank').value = '';
-            document.getElementById('buktiPengeluaran').value = '';
-            document.getElementById('formMessage').innerHTML = '';
-            
-            // Reset ke default jenis input
-            jenisInput.value = 'pemasukan';
-            pemasukanFields.classList.remove('hidden');
-            pengeluaranFields.classList.add('hidden');
-            
-            // Reset metode bayar
-            metodeBayar.value = 'Cash';
-            bankField.classList.add('hidden');
-        }
-
-        // ============================================
-        // RENDER FUNCTIONS
-        // ============================================
+        // ============ RENDER FUNCTIONS ============
         async function renderDashboard() {
             try {
                 await loadStudents();
@@ -1022,9 +866,10 @@
                 totalOutEl.innerText = 'Rp ' + totalOut.toLocaleString('id-ID');
                 balanceEl.innerText = 'Rp ' + (totalIn - totalOut).toLocaleString('id-ID');
 
+                // Progress siswa - menampilkan sisa pembayaran
                 let html = '';
                 if (students.length === 0) {
-                    html = '<p style="color:#999;">Belum ada siswa. Silahkan tambahkan siswa di menu Management.</p>';
+                    html = '<p style="color:#999;">Belum ada siswa</p>';
                 } else {
                     students.forEach(s => {
                         const paid = s.paid || 0;
@@ -1048,6 +893,7 @@
                 }
                 progressList.innerHTML = html;
 
+                // Expense table
                 const expenses = transactions.filter(t => t.type === 'pengeluaran');
                 let rows = '';
                 if (expenses.length === 0) {
@@ -1070,7 +916,6 @@
                 updateTargetInfo();
             } catch (error) {
                 console.error('Error rendering dashboard:', error);
-                showToast('❌ Gagal memuat data dashboard', 'error', 4000);
             }
         }
 
@@ -1092,19 +937,11 @@
                 updateTargetInfo();
             } catch (error) {
                 console.error('Error rendering management:', error);
-                showToast('❌ Gagal memuat data management', 'error', 4000);
             }
         }
 
         function populateStudentSelect() {
             namaSiswaSelect.innerHTML = '';
-            if (students.length === 0) {
-                const opt = document.createElement('option');
-                opt.value = '';
-                opt.textContent = 'Belum ada siswa';
-                namaSiswaSelect.appendChild(opt);
-                return;
-            }
             students.forEach(s => {
                 const opt = document.createElement('option');
                 opt.value = s.name;
@@ -1118,9 +955,7 @@
             targetAmount.value = globalTarget;
         }
 
-        // ============================================
-        // LOCK/UNLOCK FUNCTIONS
-        // ============================================
+        // ============ LOCK/UNLOCK FUNCTIONS ============
         function unlockMenu() {
             isUnlocked = true;
             hiddenNavs.forEach(nav => nav.classList.add('show'));
@@ -1129,7 +964,6 @@
             passwordModal.classList.remove('open');
             passwordError.classList.remove('show');
             passwordInput.value = '';
-            showToast('🔓 Menu Input & Management terbuka', 'success', 2000);
         }
 
         function lockMenu() {
@@ -1148,9 +982,7 @@
             }
         }
 
-        // ============================================
-        // EVENT LISTENERS
-        // ============================================
+        // ============ EVENT LISTENERS ============
         navItems.forEach(item => {
             item.addEventListener('click', function() {
                 const pageId = this.dataset.page;
@@ -1175,7 +1007,6 @@
             if (isUnlocked) {
                 if (confirm('Kunci kembali menu Input & Management?')) {
                     lockMenu();
-                    showToast('🔒 Menu dikunci', 'info', 2000);
                 }
             } else {
                 passwordModal.classList.add('open');
@@ -1193,7 +1024,6 @@
                 passwordError.classList.add('show');
                 passwordInput.value = '';
                 passwordInput.focus();
-                showToast('❌ Password salah!', 'error', 2000);
             }
         });
 
@@ -1245,13 +1075,6 @@
                     const student = document.getElementById('namaSiswa').value;
                     const nominal = parseInt(document.getElementById('nominalMasuk').value);
                     
-                    if (!student || student === 'Belum ada siswa') {
-                        formMessage.innerHTML = '<span class="error-msg">Belum ada siswa. Tambahkan siswa terlebih dahulu.</span>';
-                        submitBtn.disabled = false;
-                        submitBtn.innerHTML = '<i class="fas fa-save"></i> Simpan';
-                        return;
-                    }
-                    
                     if (!nominal || nominal <= 0) {
                         formMessage.innerHTML = '<span class="error-msg">Masukkan nominal valid</span>';
                         submitBtn.disabled = false;
@@ -1272,12 +1095,10 @@
 
                     if (success) {
                         formMessage.innerHTML = '<span class="success-msg">✅ Pemasukan berhasil!</span>';
-                        showToast('✅ Pemasukan berhasil disimpan!', 'success', 3000);
                         resetFormFields();
                         await renderDashboard();
                     } else {
                         formMessage.innerHTML = '<span class="error-msg">❌ Gagal menyimpan data</span>';
-                        showToast('❌ Gagal menyimpan pemasukan', 'error', 3000);
                     }
                 } else {
                     const item = document.getElementById('itemPengeluaran').value.trim();
@@ -1316,18 +1137,15 @@
 
                     if (success) {
                         formMessage.innerHTML = '<span class="success-msg">✅ Pengeluaran berhasil!</span>';
-                        showToast('✅ Pengeluaran berhasil disimpan!', 'success', 3000);
                         resetFormFields();
                         await renderDashboard();
                     } else {
                         formMessage.innerHTML = '<span class="error-msg">❌ Gagal menyimpan data</span>';
-                        showToast('❌ Gagal menyimpan pengeluaran', 'error', 3000);
                     }
                 }
             } catch (error) {
                 console.error('Error submitting transaction:', error);
                 formMessage.innerHTML = '<span class="error-msg">❌ Terjadi kesalahan</span>';
-                showToast('❌ Terjadi kesalahan saat menyimpan', 'error', 3000);
             }
 
             submitBtn.disabled = false;
@@ -1339,13 +1157,11 @@
             
             if (!name) {
                 studentMsg.innerHTML = '<span class="error-msg">Nama wajib diisi</span>';
-                showToast('❌ Nama wajib diisi', 'error', 2000);
                 return;
             }
             
             if (students.find(s => s.name.toLowerCase() === name.toLowerCase())) {
                 studentMsg.innerHTML = '<span class="error-msg">Siswa sudah ada</span>';
-                showToast('❌ Siswa sudah ada', 'error', 2000);
                 return;
             }
 
@@ -1356,7 +1172,6 @@
                 const success = await addStudent(name);
                 if (success) {
                     studentMsg.innerHTML = '<span class="success-msg">✅ Siswa "' + name + '" berhasil ditambahkan!</span>';
-                    showToast('✅ Siswa "' + name + '" berhasil ditambahkan!', 'success', 3000);
                     newStudentName.value = '';
                     await renderManagement();
                     await renderDashboard();
@@ -1366,12 +1181,10 @@
                     }, 3000);
                 } else {
                     studentMsg.innerHTML = '<span class="error-msg">❌ Gagal menambahkan siswa</span>';
-                    showToast('❌ Gagal menambahkan siswa', 'error', 3000);
                 }
             } catch (error) {
                 console.error('Error adding student:', error);
-                studentMsg.innerHTML = '<span class="error-msg">❌ ' + (error.message || 'Terjadi kesalahan') + '</span>';
-                showToast('❌ ' + (error.message || 'Terjadi kesalahan'), 'error', 3000);
+                studentMsg.innerHTML = '<span class="error-msg">❌ Terjadi kesalahan</span>';
             }
 
             addStudentBtn.disabled = false;
@@ -1381,7 +1194,7 @@
         setTargetBtn.addEventListener('click', async function() {
             const val = parseInt(targetAmount.value);
             if (!val || val <= 0) {
-                showToast('❌ Masukkan target yang valid (minimal Rp 1)', 'error', 3000);
+                alert('Masukkan target yang valid (minimal Rp 1)');
                 return;
             }
 
@@ -1394,18 +1207,29 @@
                     updateTargetInfo();
                     await renderDashboard();
                     await renderManagement();
-                    showToast('✅ Target berhasil diupdate!', 'success', 3000);
+                    alert('✅ Target berhasil diupdate!');
                 } else {
-                    showToast('❌ Gagal mengupdate target', 'error', 3000);
+                    alert('❌ Gagal mengupdate target');
                 }
             } catch (error) {
                 console.error('Error setting target:', error);
-                showToast('❌ Terjadi kesalahan saat update target', 'error', 3000);
+                alert('❌ Terjadi kesalahan');
             }
 
             setTargetBtn.disabled = false;
             setTargetBtn.textContent = 'Set Target';
         });
+
+        function resetFormFields() {
+            const today = new Date().toISOString().slice(0,10);
+            tanggalInput.value = today;
+            document.getElementById('nominalMasuk').value = '';
+            document.getElementById('nominalKeluar').value = '';
+            document.getElementById('itemPengeluaran').value = '';
+            document.getElementById('namaBank').value = '';
+            document.getElementById('buktiPengeluaran').value = '';
+            document.getElementById('formMessage').innerHTML = '';
+        }
 
         targetAmount.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
@@ -1422,11 +1246,9 @@
         closeModal.addEventListener('click', () => modal.classList.remove('open'));
         modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('open'); });
 
-        // ============================================
-        // INIT
-        // ============================================
+        // ============ INIT ============
         async function init() {
-            resetFormFields();
+            tanggalInput.value = new Date().toISOString().slice(0,10);
             
             await loadStudents();
             await loadTransactions();
@@ -1438,7 +1260,6 @@
             await renderManagement();
 
             lockMenu();
-            showToast('🚀 Aplikasi siap digunakan!', 'info', 2000);
         }
 
         init();
