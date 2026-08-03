@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz@14..32&display=swap" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Load config dari file terpisah -->
+    <script src="config.js"></script>
     <style>
         /* ===== STYLES ===== */
         * {
@@ -670,86 +672,42 @@
 
 <script>
     (function() {
-        // ============ ENCRYPTED CONFIG ============
-        // Semua data sensitif di-encode dengan Base64 dan XOR sederhana
-        // URL: https://vnsiqcafdyezzhtfgytu.supabase.co
-        // ANON Key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZuc2lxY2FmZHllenpodGZneXR1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU3MjQ1NjQsImV4cCI6MjEwMTMwMDU2NH0.SBI82rAo6AYYQiWym1FnjU-wA3qyIR5t613nQQpEoOM
-        // Password: admin123
-        
-        // Encoded dengan Base64 + XOR key sederhana
-        const ENC_CONFIG = {
-            // XOR key untuk dekripsi
-            key: 42,
-            // Encoded data (Base64 + XOR)
-            url: 'aHR0cHM6Ly92bnNpcWNhZmR5ZXp6aHRmZ3l0dS5zdXBhYmFzZS5jbw==',
-            anonKey: 'ZXlKaGJHY2lPaUpTVXpJMU5pSXNJblI1Y0NJNklrcFhWbWx1Y2lJc0luQnliMlpwYkdWZmN5STZJbVp2Y21sbmFXRnVaR1Z6WlNJc0luUnlkV0pzSWpvaU5UZzVOVGN5TkRVeE56SXNJbUYxY0d4bElqb3hNakV3TVRNeU1EWTBOallzSW14aGJXbGtJam94TWpFd01UTXdNRFUyTkhRNC5TQkk4MnJBbzZBWVlRaVd5bTFGbmpVLXdBM3F5SVI1dDYxM25RUXBFb09N',
-            password: 'YWRtaW4xMjM=' // admin123 in base64
-        };
-
-        // ============ DECRYPT FUNCTIONS ============
-        function decodeBase64(encoded) {
-            try {
-                return atob(encoded);
-            } catch (e) {
-                return encoded;
-            }
+        // ============================================
+        // CEK APAKAH CONFIG LOADED
+        // ============================================
+        if (typeof CONFIG === 'undefined') {
+            alert('❌ File config.js tidak ditemukan!\nPastikan file config.js berada di folder yang sama.');
+            return;
         }
 
-        function xorDecrypt(encoded, key) {
-            try {
-                const decoded = decodeBase64(encoded);
-                let result = '';
-                for (let i = 0; i < decoded.length; i++) {
-                    result += String.fromCharCode(decoded.charCodeAt(i) ^ key);
-                }
-                return result;
-            } catch (e) {
-                return decodeBase64(encoded);
-            }
-        }
+        // ============================================
+        // AMBIL DATA DARI CONFIG
+        // ============================================
+        const SUPABASE_URL = CONFIG.SUPABASE_URL;
+        const SUPABASE_ANON_KEY = CONFIG.SUPABASE_ANON_KEY;
+        const PASSWORD = CONFIG.PASSWORD;
+        const DEFAULT_TARGET = CONFIG.DEFAULT_TARGET || 500000;
 
-        // Get decrypted config
-        function getConfig() {
-            // Simple XOR decryption with key 42
-            const key = ENC_CONFIG.key;
-            
-            // Decrypt URL
-            let url = xorDecrypt(ENC_CONFIG.url, key);
-            // If XOR fails, use base64 decoded
-            if (!url || url.length < 10) {
-                url = decodeBase64(ENC_CONFIG.url);
-            }
-            
-            // Decrypt ANON Key
-            let anonKey = xorDecrypt(ENC_CONFIG.anonKey, key);
-            if (!anonKey || anonKey.length < 20) {
-                anonKey = decodeBase64(ENC_CONFIG.anonKey);
-            }
-            
-            // Password langsung dari base64
-            const password = decodeBase64(ENC_CONFIG.password);
-            
-            return { url, anonKey, password };
-        }
+        console.log('✅ Config loaded successfully');
+        console.log('✅ URL:', SUPABASE_URL);
+        console.log('✅ ANON Key length:', SUPABASE_ANON_KEY.length);
 
-        // ============ INIT SUPABASE ============
-        const config = getConfig();
-        const SUPABASE_URL = config.url;
-        const SUPABASE_ANON_KEY = config.anonKey;
-        const PASSWORD = config.password;
-
-        console.log('Supabase connected successfully');
-
-        // Initialize Supabase client
+        // ============================================
+        // INIT SUPABASE
+        // ============================================
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // ============ DATA STATE ============
-        let globalTarget = 500000;
+        // ============================================
+        // DATA STATE
+        // ============================================
+        let globalTarget = DEFAULT_TARGET;
         let students = [];
         let transactions = [];
         let isUnlocked = false;
 
-        // ============ DOM REFS ============
+        // ============================================
+        // DOM REFS
+        // ============================================
         const pages = document.querySelectorAll('.page');
         const navItems = document.querySelectorAll('.nav-links li');
         const hiddenNavs = document.querySelectorAll('.hidden-nav');
@@ -787,7 +745,9 @@
         const cancelBtn = document.getElementById('cancelPassword');
         const lockIcon = document.getElementById('lockIcon');
 
-        // ============ SUPABASE CRUD OPERATIONS ============
+        // ============================================
+        // SUPABASE CRUD OPERATIONS
+        // ============================================
         async function loadStudents() {
             try {
                 const { data, error } = await supabase
@@ -795,12 +755,14 @@
                     .select('*')
                     .order('name', { ascending: true });
                 
-                if (error) throw error;
+                if (error) {
+                    console.warn('Students table error:', error);
+                    return [];
+                }
                 students = data || [];
                 return students;
             } catch (error) {
-                console.error('Error loading students:', error);
-                // Return empty array if error (e.g., table doesn't exist yet)
+                console.warn('Error loading students:', error);
                 return [];
             }
         }
@@ -812,11 +774,14 @@
                     .select('*')
                     .order('date', { ascending: false });
                 
-                if (error) throw error;
+                if (error) {
+                    console.warn('Transactions table error:', error);
+                    return [];
+                }
                 transactions = data || [];
                 return transactions;
             } catch (error) {
-                console.error('Error loading transactions:', error);
+                console.warn('Error loading transactions:', error);
                 return [];
             }
         }
@@ -827,20 +792,19 @@
                     .from('settings')
                     .select('value')
                     .eq('key', 'global_target')
-                    .single();
+                    .maybeSingle();
                 
                 if (error) {
-                    // If table doesn't exist or no data, use default
-                    console.log('Settings table not found, using default target');
-                    return 500000;
+                    console.warn('Settings table error:', error);
+                    return DEFAULT_TARGET;
                 }
                 if (data) {
-                    globalTarget = parseInt(data.value) || 500000;
+                    globalTarget = parseInt(data.value) || DEFAULT_TARGET;
                 }
                 return globalTarget;
             } catch (error) {
-                console.error('Error loading target:', error);
-                return 500000;
+                console.warn('Error loading target:', error);
+                return DEFAULT_TARGET;
             }
         }
 
@@ -848,7 +812,7 @@
             try {
                 const { error } = await supabase
                     .from('settings')
-                    .update({ value: String(newTarget) })
+                    .upsert({ key: 'global_target', value: String(newTarget) })
                     .eq('key', 'global_target');
                 
                 if (error) throw error;
@@ -862,7 +826,6 @@
 
         async function addStudent(name) {
             try {
-                // Check if student already exists
                 const { data: existing } = await supabase
                     .from('students')
                     .select('name')
@@ -921,7 +884,9 @@
             }
         }
 
-        // ============ RENDER FUNCTIONS ============
+        // ============================================
+        // RENDER FUNCTIONS
+        // ============================================
         async function renderDashboard() {
             try {
                 await loadStudents();
@@ -938,10 +903,9 @@
                 totalOutEl.innerText = 'Rp ' + totalOut.toLocaleString('id-ID');
                 balanceEl.innerText = 'Rp ' + (totalIn - totalOut).toLocaleString('id-ID');
 
-                // Progress siswa - menampilkan sisa pembayaran
                 let html = '';
                 if (students.length === 0) {
-                    html = '<p style="color:#999;">Belum ada siswa</p>';
+                    html = '<p style="color:#999;">Belum ada siswa. Silahkan tambahkan siswa di menu Management.</p>';
                 } else {
                     students.forEach(s => {
                         const paid = s.paid || 0;
@@ -965,7 +929,6 @@
                 }
                 progressList.innerHTML = html;
 
-                // Expense table
                 const expenses = transactions.filter(t => t.type === 'pengeluaran');
                 let rows = '';
                 if (expenses.length === 0) {
@@ -1014,6 +977,13 @@
 
         function populateStudentSelect() {
             namaSiswaSelect.innerHTML = '';
+            if (students.length === 0) {
+                const opt = document.createElement('option');
+                opt.value = '';
+                opt.textContent = 'Belum ada siswa';
+                namaSiswaSelect.appendChild(opt);
+                return;
+            }
             students.forEach(s => {
                 const opt = document.createElement('option');
                 opt.value = s.name;
@@ -1027,7 +997,9 @@
             targetAmount.value = globalTarget;
         }
 
-        // ============ LOCK/UNLOCK FUNCTIONS ============
+        // ============================================
+        // LOCK/UNLOCK FUNCTIONS
+        // ============================================
         function unlockMenu() {
             isUnlocked = true;
             hiddenNavs.forEach(nav => nav.classList.add('show'));
@@ -1054,7 +1026,9 @@
             }
         }
 
-        // ============ EVENT LISTENERS ============
+        // ============================================
+        // EVENT LISTENERS
+        // ============================================
         navItems.forEach(item => {
             item.addEventListener('click', function() {
                 const pageId = this.dataset.page;
@@ -1146,6 +1120,13 @@
                 if (jenis === 'pemasukan') {
                     const student = document.getElementById('namaSiswa').value;
                     const nominal = parseInt(document.getElementById('nominalMasuk').value);
+                    
+                    if (!student || student === 'Belum ada siswa') {
+                        formMessage.innerHTML = '<span class="error-msg">Belum ada siswa. Tambahkan siswa terlebih dahulu.</span>';
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = '<i class="fas fa-save"></i> Simpan';
+                        return;
+                    }
                     
                     if (!nominal || nominal <= 0) {
                         formMessage.innerHTML = '<span class="error-msg">Masukkan nominal valid</span>';
@@ -1318,7 +1299,9 @@
         closeModal.addEventListener('click', () => modal.classList.remove('open'));
         modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('open'); });
 
-        // ============ INIT ============
+        // ============================================
+        // INIT
+        // ============================================
         async function init() {
             tanggalInput.value = new Date().toISOString().slice(0,10);
             
