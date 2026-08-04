@@ -39,6 +39,7 @@
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
+            gap: 12px;
             position: relative;
         }
 
@@ -55,6 +56,7 @@
             display: flex;
             gap: 28px;
             list-style: none;
+            flex-wrap: wrap;
         }
         .nav-links li {
             font-weight: 600;
@@ -196,37 +198,113 @@
             display: block;
         }
 
-        .score-grid {
+        /* ===== SCORE GRID - 2 BARIS ===== */
+        .score-grid-row1 {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .score-grid-row2 {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
             margin-bottom: 32px;
         }
+
         .score-card {
             background: white;
-            padding: 20px 16px;
-            border-radius: 20px;
+            padding: 18px 14px;
+            border-radius: 16px;
             box-shadow: 0 4px 16px rgba(0,0,0,0.02);
             border: 1px solid #e9edf2;
             text-align: center;
         }
         .score-card .label {
             color: #6f7e8c;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 500;
             letter-spacing: 0.3px;
         }
         .score-card .value {
-            font-size: 28px;
+            font-size: 22px;
             font-weight: 700;
             color: #0b2b3d;
-            margin-top: 6px;
+            margin-top: 4px;
         }
         .score-card .value.positive { color: #2a9d8f; }
         .score-card .value.negative { color: #e76f51; }
-        .score-card .loading {
-            font-size: 16px;
-            color: #999;
+        .score-card .sub {
+            font-size: 11px;
+            color: #8899a8;
+            margin-top: 2px;
+        }
+
+        .score-card.breakdown-kas { border-left: 4px solid #2a9d8f; }
+        .score-card.breakdown-komite { border-left: 4px solid #2980b9; }
+        .score-card.breakdown-dana { border-left: 4px solid #e67e22; }
+        .score-card.breakdown-konsumsi { border-left: 4px solid #8e44ad; }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 992px) {
+            .score-grid-row2 {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .score-grid-row1 {
+                grid-template-columns: 1fr;
+            }
+            .score-grid-row2 {
+                grid-template-columns: 1fr 1fr;
+            }
+            .page {
+                padding: 16px;
+            }
+            .navbar {
+                padding: 12px 16px;
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .nav-links {
+                justify-content: center;
+                gap: 16px;
+            }
+            .nav-links li {
+                font-size: 13px;
+            }
+            .logo h1 {
+                font-size: 16px;
+                text-align: center;
+            }
+            .progress-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .progress-item .name {
+                width: 100%;
+            }
+            .progress-item .month-container {
+                width: 100%;
+            }
+            .progress-item .status {
+                width: 100%;
+                text-align: left;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .score-grid-row2 {
+                grid-template-columns: 1fr;
+            }
+            .score-card {
+                padding: 14px 10px;
+            }
+            .score-card .value {
+                font-size: 16px;
+            }
         }
 
         .progress-section {
@@ -243,7 +321,6 @@
             margin-bottom: 16px;
         }
 
-        /* ===== STYLE VISUAL BULANAN ===== */
         .progress-item {
             display: flex;
             align-items: center;
@@ -289,9 +366,6 @@
         .progress-item .month-box.paid::after {
             content: "✓";
         }
-        .progress-item .month-box .month-label {
-            display: none;
-        }
         .progress-item .status {
             font-size: 13px;
             font-weight: 600;
@@ -313,16 +387,22 @@
             color: #8899a8;
         }
 
+        /* ===== TABLES ===== */
         .table-wrap {
             background: white;
             border-radius: 20px;
             border: 1px solid #e9edf2;
             overflow-x: auto;
+            margin-bottom: 24px;
+        }
+        .table-wrap:last-child {
+            margin-bottom: 0;
         }
         table {
             width: 100%;
             border-collapse: collapse;
             font-size: 14px;
+            min-width: 500px;
         }
         th {
             text-align: left;
@@ -348,6 +428,32 @@
         .photo-thumb:hover {
             opacity: 0.85;
             transform: scale(1.02);
+        }
+
+        .table-section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1e3b4a;
+            margin: 24px 0 12px 0;
+        }
+        .table-section-title:first-of-type {
+            margin-top: 0;
+        }
+
+        .method-badge {
+            display: inline-block;
+            padding: 2px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .method-cash {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+        .method-tf {
+            background: #e3f2fd;
+            color: #0d47a1;
         }
 
         .modal {
@@ -472,8 +578,6 @@
         }
         @media (max-width: 800px) {
             .management-grid { grid-template-columns: 1fr; }
-            .navbar { flex-direction: column; align-items: stretch; gap: 12px; }
-            .nav-links { justify-content: space-around; }
             .progress-item .month-box {
                 width: 28px;
                 height: 28px;
@@ -497,6 +601,8 @@
             justify-content: space-between;
             padding: 10px 0;
             border-bottom: 1px solid #ecf0f5;
+            flex-wrap: wrap;
+            gap: 8px;
         }
         .student-item:last-child { border-bottom: none; }
         .student-item .total {
@@ -593,6 +699,20 @@
             white-space: nowrap;
             z-index: 10;
         }
+
+        .dashboard-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #0b2b3d;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .dashboard-title .title-icon {
+            font-size: 28px;
+        }
+        .dashboard-title .title-icon { color: #2a9d8f; }
     </style>
 </head>
 <body>
@@ -601,7 +721,7 @@
     <!-- NAVBAR -->
     <nav class="navbar">
         <div class="logo"><h1>🏫 Mutiara <span>Indah </span>2026 - 2027</span></h1></div>
-        <div style="display: flex; align-items: center; gap: 16px;">
+        <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
             <ul class="nav-links">
                 <li class="active" data-page="dashboard"><i class="fas fa-chart-pie"></i> Dashboard</li>
                 <li class="hidden-nav" data-page="input"><i class="fas fa-pen"></i> Input</li>
@@ -627,17 +747,67 @@
 
     <!-- ================= DASHBOARD ================= -->
     <div id="dashboard" class="page active">
-        <div class="score-grid" id="scoreCards">
-            <div class="score-card"><div class="label">💰 Uang Masuk</div><div class="value positive" id="totalIn">Loading...</div></div>
-            <div class="score-card"><div class="label">💸 Uang Keluar</div><div class="value negative" id="totalOut">Loading...</div></div>
-            <div class="score-card"><div class="label">📊 Saldo Akhir</div><div class="value" id="balance">Loading...</div></div>
+        <div class="dashboard-title">
+            <span class="title-icon">💰</span> Dashboard Kas
         </div>
 
+        <!-- SCORE CARDS - BARIS 1 (3 kolom) -->
+        <div class="score-grid-row1">
+            <div class="score-card">
+                <div class="label">💰 Uang Masuk</div>
+                <div class="value positive" id="totalIn">Rp 0</div>
+            </div>
+            <div class="score-card">
+                <div class="label">💸 Uang Keluar</div>
+                <div class="value negative" id="totalOut">Rp 0</div>
+            </div>
+            <div class="score-card">
+                <div class="label">📊 Saldo Akhir</div>
+                <div class="value" id="balance">Rp 0</div>
+            </div>
+        </div>
+
+        <!-- SCORE CARDS - BARIS 2 (4 kolom) BREAKDOWN POS -->
+        <div class="score-grid-row2">
+            <div class="score-card breakdown-kas">
+                <div class="label">💰 Kas</div>
+                <div class="value positive" id="breakdownKas">Rp 0</div>
+                <div class="sub">28.57% dari Saldo</div>
+            </div>
+            <div class="score-card breakdown-komite">
+                <div class="label">🏛️ Komite</div>
+                <div class="value positive" id="breakdownKomite">Rp 0</div>
+                <div class="sub">28.57% dari Saldo</div>
+            </div>
+            <div class="score-card breakdown-dana">
+                <div class="label">🤝 Dana Sosial</div>
+                <div class="value positive" id="breakdownDana">Rp 0</div>
+                <div class="sub">14.29% dari Saldo</div>
+            </div>
+            <div class="score-card breakdown-konsumsi">
+                <div class="label">🍽️ Konsumsi</div>
+                <div class="value positive" id="breakdownKonsumsi">Rp 0</div>
+                <div class="sub">28.57% dari Saldo</div>
+            </div>
+        </div>
+
+        <!-- PROGRESS PEMBAYARAN -->
         <div class="progress-section">
-            <h3><i class="fas fa-calendar-alt"></i> Pembayaran per Siswa / i (Agustus 2026 - Mei 2027)</h3>
+            <h3><i class="fas fa-calendar-alt"></i> Pembayaran Kas per Siswa (Agustus 2026 - Mei 2027)</h3>
             <div id="progressList"><div class="loading-text">Loading data siswa...</div></div>
         </div>
 
+        <!-- TABEL PEMASUKAN KAS -->
+        <div class="table-section-title"><i class="fas fa-arrow-down" style="color:#2a9d8f;"></i> Riwayat Pemasukan Kas</div>
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>Tanggal</th><th>Nama Siswa</th><th>Metode Pembayaran</th><th>Bank</th><th>Nominal</th></tr></thead>
+                <tbody id="paymentTableBody"><tr><td colspan="5" class="loading-text">Loading data...</td></tr></tbody>
+            </table>
+        </div>
+
+        <!-- TABEL PENGELUARAN KAS -->
+        <div class="table-section-title"><i class="fas fa-arrow-up" style="color:#e76f51;"></i> Riwayat Pengeluaran Kas</div>
         <div class="table-wrap">
             <table>
                 <thead><tr><th>Tanggal</th><th>Item Pengeluaran</th><th>Nominal</th><th>Foto Bukti</th></tr></thead>
@@ -763,7 +933,12 @@
         const TOTAL_MONTHS = 10;
         const DEFAULT_TARGET = MONTHLY_FEE * TOTAL_MONTHS;
 
-        // Daftar bulan untuk display
+        // Komposisi per pos
+        const POS_KAS = 10000;
+        const POS_KOMITE = 10000;
+        const POS_DANA = 5000;
+        const POS_KONSUMSI = 10000;
+
         const BULAN_LIST = [
             { bulan: 'Agt', tahun: '2026', full: 'Agustus 2026' },
             { bulan: 'Sep', tahun: '2026', full: 'September 2026' },
@@ -787,10 +962,16 @@
         const pages = document.querySelectorAll('.page');
         const navItems = document.querySelectorAll('.nav-links li');
         const hiddenNavs = document.querySelectorAll('.hidden-nav');
+        
         const totalInEl = document.getElementById('totalIn');
         const totalOutEl = document.getElementById('totalOut');
         const balanceEl = document.getElementById('balance');
+        const breakdownKas = document.getElementById('breakdownKas');
+        const breakdownKomite = document.getElementById('breakdownKomite');
+        const breakdownDana = document.getElementById('breakdownDana');
+        const breakdownKonsumsi = document.getElementById('breakdownKonsumsi');
         const progressList = document.getElementById('progressList');
+        const paymentTableBody = document.getElementById('paymentTableBody');
         const expenseTableBody = document.getElementById('expenseTableBody');
 
         const jenisInput = document.getElementById('jenisInput');
@@ -984,9 +1165,22 @@
                     else if (t.type === 'pengeluaran') totalOut += t.nominal;
                 });
 
+                const balance = totalIn - totalOut;
+
                 totalInEl.innerText = 'Rp ' + totalIn.toLocaleString('id-ID');
                 totalOutEl.innerText = 'Rp ' + totalOut.toLocaleString('id-ID');
-                balanceEl.innerText = 'Rp ' + (totalIn - totalOut).toLocaleString('id-ID');
+                balanceEl.innerText = 'Rp ' + balance.toLocaleString('id-ID');
+
+                // ===== BREAKDOWN POS DARI SALDO AKHIR =====
+                const pctKas = POS_KAS / MONTHLY_FEE;
+                const pctKomite = POS_KOMITE / MONTHLY_FEE;
+                const pctDana = POS_DANA / MONTHLY_FEE;
+                const pctKonsumsi = POS_KONSUMSI / MONTHLY_FEE;
+
+                breakdownKas.innerText = 'Rp ' + Math.round(balance * pctKas).toLocaleString('id-ID');
+                breakdownKomite.innerText = 'Rp ' + Math.round(balance * pctKomite).toLocaleString('id-ID');
+                breakdownDana.innerText = 'Rp ' + Math.round(balance * pctDana).toLocaleString('id-ID');
+                breakdownKonsumsi.innerText = 'Rp ' + Math.round(balance * pctKonsumsi).toLocaleString('id-ID');
 
                 // ===== VISUAL BULANAN =====
                 let html = '';
@@ -1000,7 +1194,6 @@
                         const sisaRupiah = sisaBulan * MONTHLY_FEE;
                         const isFull = bulanLunas >= TOTAL_MONTHS;
 
-                        // Build month boxes
                         let monthHtml = '';
                         BULAN_LIST.forEach((b, index) => {
                             const isPaid = index < bulanLunas;
@@ -1033,18 +1226,43 @@
                 }
                 progressList.innerHTML = html;
 
-                // Expense table
+                // ===== TABEL PEMASUKAN (dengan kolom Bank) =====
+                const payments = transactions.filter(t => t.type === 'pemasukan');
+                let paymentRows = '';
+                if (payments.length === 0) {
+                    paymentRows = `<tr><td colspan="5" style="text-align:center;color:#999;">Belum ada pemasukan</td></tr>`;
+                } else {
+                    payments.forEach(p => {
+                        const methodClass = p.method === 'Cash' ? 'method-cash' : 'method-tf';
+                        const bankDisplay = p.bank || '-';
+                        paymentRows += `<tr>
+                            <td>${p.date}</td>
+                            <td><strong>${p.student}</strong></td>
+                            <td><span class="method-badge ${methodClass}">${p.method}</span></td>
+                            <td>${bankDisplay}</td>
+                            <td>Rp ${p.nominal.toLocaleString('id-ID')}</td>
+                        </tr>`;
+                    });
+                }
+                paymentTableBody.innerHTML = paymentRows;
+
+                // ===== TABEL PENGELUARAN =====
                 const expenses = transactions.filter(t => t.type === 'pengeluaran');
-                let rows = '';
+                let expenseRows = '';
                 if (expenses.length === 0) {
-                    rows = `<tr><td colspan="4" style="text-align:center;color:#999;">Belum ada pengeluaran</td></tr>`;
+                    expenseRows = `<tr><td colspan="4" style="text-align:center;color:#999;">Belum ada pengeluaran</td></tr>`;
                 } else {
                     expenses.forEach(e => {
                         const photoHtml = e.photo ? `<img src="${e.photo}" class="photo-thumb" data-photo="${e.photo}" />` : '<span style="color:#999;">tidak ada</span>';
-                        rows += `<tr><td>${e.date}</td><td>${e.item || '-'}</td><td>Rp ${e.nominal.toLocaleString('id-ID')}</td><td>${photoHtml}</td></tr>`;
+                        expenseRows += `<tr>
+                            <td>${e.date}</td>
+                            <td>${e.item || '-'}</td>
+                            <td>Rp ${e.nominal.toLocaleString('id-ID')}</td>
+                            <td>${photoHtml}</td>
+                        </tr>`;
                     });
                 }
-                expenseTableBody.innerHTML = rows;
+                expenseTableBody.innerHTML = expenseRows;
 
                 document.querySelectorAll('.photo-thumb').forEach(img => {
                     img.addEventListener('click', function() {
